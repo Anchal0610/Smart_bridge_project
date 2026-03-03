@@ -95,11 +95,11 @@ VITE_API_BASE_URL=http://localhost:8000/api
 
 ## 🛠 Installation & Setup (Auto)
 
-The easiest way to get started is by running the auto-setup script for your OS:
+The easiest way to get started is by running the orchestrator script for your OS:
 
 ### 🍎 Mac / 🐧 Linux
 ```bash
-chmod +x start.sh
+chmod +x start.sh start_backend.sh start_frontend.sh
 ./start.sh
 ```
 
@@ -108,11 +108,10 @@ chmod +x start.sh
 start.bat
 ```
 
-The scripts will:
-1. Create a Python virtual environment and install backend dependencies.
-2. Install frontend dependencies.
-3. Start the backend server in a **new terminal window** (Port 8000).
-4. Start the frontend server in the current terminal (Port 3001).
+### 🛠️ Individual Services
+You can also run the backend or frontend individually if needed:
+- **Backend Only**: `./start_backend.sh` or `start_backend.bat`
+- **Frontend Only**: `./start_frontend.sh` or `start_frontend.bat`
 
 ---
 
