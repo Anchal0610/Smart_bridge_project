@@ -4,18 +4,27 @@ import uvicorn
 import os
 from dotenv import load_dotenv
 
+from .routers import auth
+from .database import engine, Base
+
 load_dotenv()
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ArogyaMitra - AI Fitness Platform")
 
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust as needed for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include Routers
+app.include_router(auth.router)
 
 @app.get("/")
 async def root():
