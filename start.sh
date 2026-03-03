@@ -19,8 +19,7 @@ pip install -r requirements.txt --quiet
 pip install bcrypt==4.0.1 --quiet
 
 # Start Backend in background
-echo "🟢 Starting Backend Server on http://localhost:8000..."
-# Kill any process on port 8000 first
+echo "🟢 Starting Backend Server (Logs in backend.log)..."
 lsof -ti :8000 | xargs kill -9 2>/dev/null
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload > backend.log 2>&1 &
 BACKEND_PID=$!
@@ -31,14 +30,13 @@ cd ..
 echo "⚛️ Setting up Frontend..."
 cd frontend
 if [ ! -d "node_modules" ]; then
-    echo "Installing frontend dependencies (this may take a minute)..."
+    echo "Installing frontend dependencies..."
     npm install --silent
 fi
 
 # Start Frontend
-echo "🔵 Starting Frontend Server on http://localhost:5173..."
-# Kill any process on port 5173 first
-lsof -ti :5173 | xargs kill -9 2>/dev/null
+echo "🔵 Starting Frontend Server on http://localhost:3001..."
+lsof -ti :3001 | xargs kill -9 2>/dev/null
 npm run dev
 
 # Cleanup on exit
