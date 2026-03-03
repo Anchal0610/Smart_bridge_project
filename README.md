@@ -93,14 +93,31 @@ VITE_API_BASE_URL=http://localhost:8000/api
 
 ---
 
-## 🛠 Installation & Setup
+## 🛠 Installation & Setup (Auto)
+
+The easiest way to get started is by running the auto-setup script:
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+This script will:
+1. Create a Python virtual environment and install backend dependencies.
+2. Install frontend dependencies.
+3. Start the backend server on port 8000.
+4. Start the frontend server on port 5173.
+
+---
+
+## 🛠 Manual Setup
 
 ### Backend
 1. Navigate to `/backend`
 2. Create venv: `python3.11 -m venv venv`
 3. Activate venv: `source venv/bin/activate`
 4. Install dependencies: `pip install -r requirements.txt`
-5. Run server: `python -m uvicorn app.main:app --reload`
+5. Run server: `python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`
 
 ### Frontend
 1. Navigate to `/frontend`
