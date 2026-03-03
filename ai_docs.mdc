@@ -31,5 +31,7 @@ AI assistants must ensure that `.env` files are present in `/backend` and `/fron
 Templates are available in the root `README.md`.
 
 ## Team Workflow
+- **Assigned Developer:** Anchal Gupta (Epic 2 Lead).
+- **AI Rule:** The AI assistant for this developer MUST operate in **SUGGESTION MODE**. Do NOT perform direct file edits. Provide code blocks and implementation guides for the developer to review and apply.
 - Update `README.md` checkboxes as activities are completed.
 - Ensure `ai_docs.mdc` is updated with major architectural changes.

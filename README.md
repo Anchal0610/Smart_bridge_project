@@ -132,4 +132,4 @@ You can also run the backend or frontend individually if needed:
 ---
 
 ## 👥 Contributors
-- **Assigned to:** Nitesh Chourasiya
+- **Assigned to:** Anchal Gupta (Epic 2 Lead)
