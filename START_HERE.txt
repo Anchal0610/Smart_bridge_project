@@ -1,0 +1,2 @@
+Welcome to ArogyaMitra!
+Start by reading the README.md and running SETUP.sh.

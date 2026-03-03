@@ -1,0 +1,3 @@
+@echo off
+echo Setting up ArogyaMitra...
+pause
