@@ -72,3 +72,19 @@ class UserLogin(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     password: str
+
+
+class PasswordResetRequest(BaseModel):
+    """Step 1: User provides their email to initiate a password reset."""
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    """Step 2: User provides the token they received + their new password."""
+    token: str
+    new_password: str = Field(..., min_length=8, description="New password (minimum 8 characters)")
+
+
+class PasswordChangeResponse(BaseModel):
+    """Standard success response for password-related operations."""
+    message: str
