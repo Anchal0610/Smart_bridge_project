@@ -18,11 +18,10 @@ pip install -r requirements.txt --quiet
 # Fix for bcrypt if needed (applied previously but ensuring here)
 pip install bcrypt==4.0.1 --quiet
 
-# Start Backend in background
-echo "🟢 Starting Backend Server (Logs in backend.log)..."
+# Start Backend in a new terminal window (macOS)
+echo "🟢 Launching Backend Server in a new window..."
 lsof -ti :8000 | xargs kill -9 2>/dev/null
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload > backend.log 2>&1 &
-BACKEND_PID=$!
+osascript -e "tell application \"Terminal\" to do script \"cd $(pwd)/backend && source venv/bin/activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload\""
 
 cd ..
 
@@ -38,6 +37,3 @@ fi
 echo "🔵 Starting Frontend Server on http://localhost:3001..."
 lsof -ti :3001 | xargs kill -9 2>/dev/null
 npm run dev
-
-# Cleanup on exit
-trap "kill $BACKEND_PID; exit" INT TERM EXIT
