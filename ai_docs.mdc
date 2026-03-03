@@ -24,6 +24,12 @@ This file provides context for AI assistants working on the ArogyaMitra project.
 - **Spoonacular:** Core nutrition data source.
 - **YouTube:** Demonstration video source for exercises.
 
+## 🔐 Environment Setup
+AI assistants must ensure that `.env` files are present in `/backend` and `/frontend`.
+- **Backend:** Requires `DATABASE_URL`, `SECRET_KEY`, and API keys for Groq, OpenAI, Gemini, and Google Services.
+- **Frontend:** Requires `VITE_API_BASE_URL`.
+Templates are available in the root `README.md`.
+
 ## Team Workflow
 - Update `README.md` checkboxes as activities are completed.
 - Ensure `ai_docs.mdc` is updated with major architectural changes.

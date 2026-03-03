@@ -14,6 +14,44 @@ This platform leverages advanced AI models (Groq LLaMA-3.3) and external APIs (Y
 
 ---
 
+## 🔐 Environment Configuration
+
+Since sensitive credentials are not pushed to Git, you must manually create `.env` files for both the backend and frontend.
+
+### 🐍 Backend (.env)
+Create a file named `.env` in the `/backend` directory and paste the following:
+
+```env
+# Database
+DATABASE_URL=sqlite:///./arogyamitra.db
+SECRET_KEY=arogyamitra-super-secret-key-2024-fitness-ai
+
+# App Settings
+ENVIRONMENT=development
+DEBUG=True
+CORS_ORIGINS=["http://localhost:3000", "http://localhost:3001", "http://localhost:5173"]
+
+# AI Services (Priority: HIGH)
+GROQ_API_KEY=your_groq_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Google Services
+GOOGLE_CALENDAR_CLIENT_ID=your_google_calendar_client_id_here
+GOOGLE_CALENDAR_CLIENT_SECRET=your_google_calendar_client_secret_here
+GOOGLE_CALENDAR_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
+YOUTUBE_API_KEY=your_youtube_api_key_here
+```
+
+### ⚛️ Frontend (.env)
+Create a file named `.env` in the `/frontend` directory and paste the following:
+
+```env
+VITE_API_BASE_URL=http://localhost:8000/api
+```
+
+---
+
 ## 📅 Project Roadmap & Progress
 
 ### Epic 1: Environment Setup and Project Initialization
@@ -44,9 +82,14 @@ This platform leverages advanced AI models (Groq LLaMA-3.3) and external APIs (Y
 
 ### Epic 5: Testing and Deployment
 - [ ] **Activity 5.1:** Perform backend API testing and validation.
-- [ ] ** ] **Activity 5.2:** Test frontend components and user interactions.
+- [ ] **Activity 5.2:** Test frontend components and user interactions.
 - [ ] **Activity 5.3:** Test backend–frontend API integration with axioms.
 - [ ] **Activity 5.4:** Conduct end-to-end user experience and output validation.
+
+## Epic 6: Project Alignment and Documentation
+- [x] **Activity 6.1:** Move frontend to root
+- [x] **Activity 6.2:** Create documentation files (README, SETUP, etc.)
+- [x] **Activity 6.3:** Align backend sub-files
 
 ---
 
