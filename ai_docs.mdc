@@ -1,0 +1,29 @@
+# AI Coding Assistant Context (ArogyaMitra)
+
+This file provides context for AI assistants working on the ArogyaMitra project.
+
+## Current Project Status
+- **Phase:** Epic 2 (Backend Development)
+- **Completed:** Environment setup, project structure, PostgreSQL integration, and JWT Authentication.
+- **In-Progress:** Modular routers and database models for core features (Workouts, Nutrition, etc.).
+
+## Key Project Details
+- **Stack:** FastAPI (Backend), React + Vite (Frontend), PostgreSQL (DB), Groq/OpenAI (AI).
+- **Core Modules:** User, Workout, Nutrition, Progress, Health Assessment, AI Coach.
+- **Authentication:** JWT-based, implemented in `app/routers/auth.py` and `app/utils/auth.py`.
+- **Database:** PostgreSQL 14 (Database name: `vastravaani`), SQLAlchemy ORM.
+
+## Coding Standards & Conventions
+- **Backend:** Modular pattern with `routers`, `models`, `schemas`, and `services`.
+- **Error Handling:** Use custom HTTP exceptions with descriptive detail messages.
+- **Validation:** Pydantic models for all request/response bodies.
+- **Git:** Sensitve files (`.env`, `venv/`, `node_modules/`) are ignored.
+
+## AI Integration Strategy
+- **Groq:** LLaMA-3.3-70B for high-speed inference for workout/nutrition generation.
+- **Spoonacular:** Core nutrition data source.
+- **YouTube:** Demonstration video source for exercises.
+
+## Team Workflow
+- Update `README.md` checkboxes as activities are completed.
+- Ensure `ai_docs.mdc` is updated with major architectural changes.
