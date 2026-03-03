@@ -1,58 +1,27 @@
 #!/bin/bash
+# start.sh - Orchestrator for ArogyaMitra
 
-# ArogyaMitra Auto-Setup and Run Script
-# This script installs dependencies and starts both backend and frontend servers.
-
-echo "🚀 Starting ArogyaMitra Auto-Setup..."
-
-# 1. Backend Setup
-echo "🐍 Setting up Backend..."
-cd backend
-if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv venv
-fi
-source venv/bin/activate
-echo "Installing backend dependencies..."
-pip install -r requirements.txt --quiet
-# Fix for bcrypt if needed (applied previously but ensuring here)
-pip install bcrypt==4.0.1 --quiet
-
-# Start Backend in a new terminal window or background
-echo "🟢 Launching Backend Server..."
-lsof -ti :8000 | xargs kill -9 2>/dev/null
+echo "🚀 Starting ArogyaMitra Ecosystem (Multi-Terminal)..."
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
-    osascript -e "tell application \"Terminal\" to do script \"cd $(pwd)/backend && source venv/bin/activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload\""
+    osascript -e "tell application \"Terminal\" to do script \"cd $(pwd) && ./start_backend.sh\""
+    osascript -e "tell application \"Terminal\" to do script \"cd $(pwd) && ./start_frontend.sh\""
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux (Try common terminals)
+    # Linux
     if command -v gnome-terminal >/dev/null 2>&1; then
-        gnome-terminal -- bash -c "cd $(pwd)/backend && source venv/bin/activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload; exec bash"
+        gnome-terminal -- bash -c "./start_backend.sh; exec bash"
+        gnome-terminal -- bash -c "./start_frontend.sh; exec bash"
     elif command -v xterm >/dev/null 2>&1; then
-        xterm -e "cd $(pwd)/backend && source venv/bin/activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload; exec bash" &
+        xterm -e "./start_backend.sh; exec bash" &
+        xterm -e "./start_frontend.sh; exec bash" &
     else
-        # Fallback to background
-        echo "⚠️ No supported terminal found, running in background (Logs: backend.log)"
-        source venv/bin/activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload > backend.log 2>&1 &
+        echo "⚠️ No supported terminal found, launching in current window (Sequentially)..."
+        ./start_backend.sh &
+        ./start_frontend.sh
     fi
 else
-    # Fallback to background for other systems
-    echo "⚠️ Running in background (Logs: backend.log)"
-    source venv/bin/activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload > backend.log 2>&1 &
+    # Fallback
+    ./start_backend.sh &
+    ./start_frontend.sh
 fi
-
-cd ..
-
-# 2. Frontend Setup
-echo "⚛️ Setting up Frontend..."
-cd frontend
-if [ ! -d "node_modules" ]; then
-    echo "Installing frontend dependencies..."
-    npm install --silent
-fi
-
-# Start Frontend
-echo "🔵 Starting Frontend Server on http://localhost:3001..."
-lsof -ti :3001 | xargs kill -9 2>/dev/null
-npm run dev
