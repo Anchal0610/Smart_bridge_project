@@ -12,34 +12,46 @@ router = APIRouter(
     tags=["Nutrition"]
 )
 
-@router.get("/targets")
-async def get_nutrition_targets(
+@router.post("/generate", response_model=dict)
+async def generate_monthly_plan(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if not current_user.weight or not current_user.height:
-        raise HTTPException(status_code=400, detail="User profile incomplete for nutrition calculation")
+    return await NutritionService.generate_monthly_plan(db, current_user.id)
 
-    return await NutritionService.calculate_daily_targets(
-        current_user.id,
-        current_user.weight,
-        current_user.height,
-        current_user.age or 30,
-        current_user.gender or "male",
-        current_user.fitness_goal or "maintenance"
-    )
-
-@router.get("/recipes/search")
-async def search_recipes(
-    query: str = Query(...),
-    current_user: User = Depends(get_current_user)
-):
-    return await NutritionService.search_recipes(query, current_user.diet_preference)
-
-@router.post("/log", response_model=MealRecord)
-async def log_meal(
-    meal: MealRecordCreate,
+@router.patch("/meals/{meal_id}/eat", response_model=MealRecord)
+async def mark_meal_eaten(
+    meal_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return await NutritionService.log_meal(db, current_user.id, meal)
+    from ..models.fitness import MealRecord as MealModel
+    meal = db.query(MealModel).filter(
+        MealModel.id == meal_id,
+        MealModel.user_id == current_user.id
+    ).first()
+
+    if not meal:
+        raise HTTPException(status_code=404, detail="Meal not found")
+
+    meal.is_eaten = True
+    db.commit()
+    db.refresh(meal)
+    return meal
+
+@router.get("/current-plan")
+async def get_current_nutrition_plan(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from ..models.fitness import MealRecord as MealModel
+    from datetime import datetime, timedelta
+
+    # Get meals for the next 7 days or full month
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    meals = db.query(MealModel).filter(
+        MealModel.user_id == current_user.id,
+        MealModel.scheduled_date >= today
+    ).order_by(MealModel.scheduled_date.asc()).all()
+
+    return meals

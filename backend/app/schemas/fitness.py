@@ -11,6 +11,9 @@ class ExerciseBase(BaseModel):
     instructions: Optional[str] = None
     video_url: Optional[str] = None
     category: Optional[str] = None
+    scheduled_date: Optional[datetime] = None
+    is_completed: bool = False
+    completed_at: Optional[datetime] = None
 
 class ExerciseCreate(ExerciseBase):
     pass
@@ -19,6 +22,7 @@ class Exercise(ExerciseBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
     plan_id: int
+    library_data: Optional['ExerciseLibrary'] = None
 
 # Workout Plan Schemas
 class WorkoutPlanBase(BaseModel):
@@ -26,6 +30,9 @@ class WorkoutPlanBase(BaseModel):
     goal: Optional[str] = None
     difficulty: Optional[str] = None
     duration_weeks: int = 4
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    is_active: bool = True
 
 class WorkoutPlanCreate(WorkoutPlanBase):
     pass
@@ -61,6 +68,8 @@ class MealRecordBase(BaseModel):
     carbs: float
     fats: float
     meal_type: str
+    scheduled_date: Optional[datetime] = None
+    is_eaten: bool = False
 
 class MealRecordCreate(MealRecordBase):
     pass
@@ -86,4 +95,16 @@ class HealthAssessment(HealthAssessmentBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
     user_id: int
+    created_at: datetime
+
+class ExerciseLibrary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+    muscle_group: str
+    video_url: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    description: Optional[str] = None
+    difficulty: Optional[str] = None
+    metadata_json: Optional[dict] = None
     created_at: datetime

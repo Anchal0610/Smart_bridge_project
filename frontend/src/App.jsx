@@ -32,7 +32,7 @@ function App() {
 
         <main className={`
           ${(isHomePage || isAuthPage) ? "" : "pt-8 pb-20 md:pt-12 md:pb-12 px-4 md:px-8 max-w-7xl mx-auto w-full"}
-          ${(user && !isHomePage) ? "md:ml-64" : ""}
+          ${(user && !isHomePage) ? "md:ml-20" : ""}
         `}>
           <Routes>
             <Route path="/" element={!user ? <LandingPage /> : <Navigate to="/dashboard" />} />

@@ -1,29 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Clock, Zap, Target, Flame, Dumbbell, Loader2, Plus, ArrowRight, X } from 'lucide-react';
-import { workoutApi } from '../../services/api';
+import { Play, Clock, Zap, Target, Flame, Dumbbell, Loader2, Plus, ArrowRight, X, Settings2, Trophy } from 'lucide-react';
+import { workoutApi, userApi, nutritionApi } from '../../services/api';
+import { useAuthStore } from '../../stores/authStore';
+import WorkoutCalendar from '../../components/workouts/WorkoutCalendar';
+import WorkoutStackDrawer from '../../components/workouts/WorkoutStackDrawer';
 
 const WorkoutPlans = () => {
-  const [plans, setPlans] = useState<any[]>([]);
+  const user = useAuthStore(state => state.user);
+  const updateUser = useAuthStore(state => state.updateUser);
+  const [activePlan, setActivePlan] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedExercise, setSelectedExercise] = useState<any>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Form State for Generator
-  const [goal, setGoal] = useState('muscle_gain');
-  const [level, setLevel] = useState('beginner');
+  // Profile / Form State
+  const [goal, setGoal] = useState(user?.fitness_goal || 'muscle_gain');
+  const [level, setLevel] = useState(user?.fitness_level || 'beginner');
+  const [preference, setPreference] = useState(user?.workout_preference || 'gym');
+  const [split, setSplit] = useState(user?.muscle_split || 1);
 
   useEffect(() => {
-    fetchPlans();
+    fetchActivePlan();
   }, []);
 
-  const fetchPlans = async () => {
+  const fetchActivePlan = async () => {
     try {
-      const response = await workoutApi.getPlans();
-      setPlans(response.data);
+      const response = await workoutApi.getActivePlan();
+      setActivePlan(response.data);
     } catch (error) {
-      console.error('Failed to fetch plans', error);
+      console.log('No active plan found');
+      setActivePlan(null);
     } finally {
       setLoading(false);
     }
@@ -32,14 +41,53 @@ const WorkoutPlans = () => {
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      const response = await workoutApi.generatePlan(goal, level);
-      setPlans([response.data, ...plans]);
+      // 1. Update Profile first
+      await userApi.updateProfile({
+        fitness_goal: goal,
+        fitness_level: level,
+        workout_preference: preference,
+        muscle_split: split
+      });
+
+      // Update local storage user state
+      if (user) {
+        updateUser({ ...user, fitness_goal: goal, fitness_level: level, workout_preference: preference, muscle_split: split });
+      }
+
+      // 2. Generate Workout Plan
+      const workoutRes = await workoutApi.generatePlan();
+
+      // 3. Generate Nutrition Plan in sync
+      await nutritionApi.generateMonthlyPlan();
+
+      setActivePlan(workoutRes.data);
       setShowGenerator(false);
     } catch (error) {
       console.error('Generation failed', error);
+      alert('Failed to generate plans. Please try again.');
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleExerciseToggle = async (exerciseId: number) => {
+    try {
+      await workoutApi.completeExercise(exerciseId);
+      // Refresh plan to show completion
+      await fetchActivePlan();
+
+      // Update selected exercise in drawer if open
+      if (selectedExercise && selectedExercise.id === exerciseId) {
+        setSelectedExercise((prev: any) => ({ ...prev, is_completed: !prev.is_completed }));
+      }
+    } catch (error) {
+      console.error('Failed to toggle exercise', error);
+    }
+  };
+
+  const handleExerciseClick = (exercise: any) => {
+    setSelectedExercise(exercise);
+    setIsDrawerOpen(true);
   };
 
   return (
@@ -61,53 +109,68 @@ const WorkoutPlans = () => {
       {loading ? (
         <div className="h-64 flex flex-col items-center justify-center text-gray-500 gap-4">
           <Loader2 className="w-12 h-12 animate-spin text-cyan-400" />
-          <p className="animate-pulse">Loading your routines...</p>
+          <p className="animate-pulse">Loading your training schedule...</p>
         </div>
-      ) : plans.length === 0 ? (
+      ) : !activePlan ? (
         <div className="glass-card p-12 text-center space-y-4">
-          <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto">
+          <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-cyan-500/10">
             <Dumbbell className="w-10 h-10 text-gray-600" />
           </div>
-          <h3 className="text-xl font-bold">No plans found</h3>
-          <p className="text-gray-500 max-w-xs mx-auto">Start by generating an AI-powered workout plan based on your goals.</p>
+          <h3 className="text-xl font-bold">No Active Training Plan</h3>
+          <p className="text-gray-500 max-w-xs mx-auto">Start your 30-day journey by generating an AI-powered monthly schedule.</p>
           <button
             onClick={() => setShowGenerator(true)}
-            className="text-cyan-400 font-bold hover:underline"
+            className="text-cyan-400 font-bold hover:underline flex items-center gap-2 mx-auto mt-4"
           >
-            Create first plan →
+            Build your plan now <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plans.map((plan: any, idx: number) => (
-            <motion.div
-              key={plan.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.05 }}
-              className="glass-card group overflow-hidden border-white/5 hover:border-cyan-400/30 transition-all cursor-pointer"
-              onClick={() => setSelectedPlan(plan)}
-            >
-              <div className="p-6 space-y-4">
-                <div className="flex justify-between items-start">
-                  <div className="p-3 bg-cyan-400/10 rounded-xl">
-                    <Zap className="w-6 h-6 text-cyan-400" />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-white/5 rounded-md border border-white/10">
-                    {plan.difficulty}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold group-hover:text-cyan-400 transition-colors">{plan.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1 uppercase tracking-tighter font-medium">{plan.goal}</p>
-                </div>
-                <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs font-bold text-gray-400 uppercase">
-                  <span>{plan.exercises?.length || 0} Exercises</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
-                </div>
+        <div className="space-y-8">
+          {/* Calendar View */}
+          <WorkoutCalendar
+            exercises={activePlan.exercises || []}
+            onExerciseToggle={handleExerciseToggle}
+            onExerciseClick={handleExerciseClick}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <section className="glass-card p-6 bg-emerald-500/5 border-emerald-500/20">
+              <div className="flex items-center gap-3 mb-4">
+                <Trophy className="w-5 h-5 text-emerald-400" />
+                <h4 className="font-bold text-sm uppercase tracking-widest text-emerald-400">Streak Status</h4>
               </div>
-            </motion.div>
-          ))}
+              <p className="text-3xl font-black italic">12 DAYS</p>
+              <p className="text-[10px] font-bold text-gray-500 uppercase mt-1">Current consistency streak</p>
+            </section>
+
+            <section className="glass-card p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Zap className="w-5 h-5 text-cyan-400" />
+                <h4 className="font-bold text-sm uppercase tracking-widest text-gray-400">Total Completion</h4>
+              </div>
+              <p className="text-3xl font-black italic">
+                {Math.round(((activePlan.exercises?.filter((e: any) => e.is_completed).length || 0) / (activePlan.exercises?.length || 1)) * 100)}%
+              </p>
+              <p className="text-[10px] font-bold text-gray-500 uppercase mt-1">Overall plan progress</p>
+            </section>
+
+            <section className="glass-card p-6 flex flex-col justify-between">
+               <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <Settings2 className="w-5 h-5 text-gray-400" />
+                  <h4 className="font-bold text-sm uppercase tracking-widest text-gray-400">Configuration</h4>
+                </div>
+                <p className="text-xs font-bold text-gray-300 uppercase">{activePlan.difficulty} • {activePlan.goal}</p>
+              </div>
+              <button
+                onClick={() => setShowGenerator(true)}
+                className="text-[10px] font-black uppercase text-cyan-400 hover:underline mt-4"
+              >
+                Change Preferences
+              </button>
+            </section>
+          </div>
         </div>
       )}
 
@@ -170,6 +233,41 @@ const WorkoutPlans = () => {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Preference</label>
+                    <div className="flex gap-2">
+                       {['gym', 'home'].map(p => (
+                        <button
+                          key={p}
+                          onClick={() => setPreference(p)}
+                          className={`flex-1 py-2 rounded-lg border text-[10px] font-black uppercase tracking-widest transition-all
+                            ${preference === p ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-gray-500'}
+                          `}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Muscle Split</label>
+                    <div className="flex gap-2">
+                       {[1, 2].map(s => (
+                        <button
+                          key={s}
+                          onClick={() => setSplit(s)}
+                          className={`flex-1 py-2 rounded-lg border text-[10px] font-black uppercase tracking-widest transition-all
+                            ${split === s ? 'bg-white text-black border-white' : 'bg-white/5 border-white/10 text-gray-500'}
+                          `}
+                        >
+                          {s} Muscle{s > 1 ? 's' : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   onClick={handleGenerate}
                   disabled={generating}
@@ -193,83 +291,12 @@ const WorkoutPlans = () => {
         )}
       </AnimatePresence>
 
-      {/* Plan Details Sidebar/Overlay (Simplified for now) */}
-      <AnimatePresence>
-        {selectedPlan && (
-          <div className="fixed inset-0 z-[100] flex justify-end">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedPlan(null)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-full max-w-2xl bg-[#0a0a0c] h-full shadow-2xl overflow-y-auto"
-            >
-              <div className="sticky top-0 z-10 glass-card rounded-none border-x-0 border-t-0 p-6 flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-black italic">{selectedPlan.name}</h2>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">{selectedPlan.goal} • {selectedPlan.difficulty}</p>
-                </div>
-                <button onClick={() => setSelectedPlan(null)} className="p-2 hover:bg-white/5 rounded-full">
-                  <X className="w-6 h-6 text-gray-400" />
-                </button>
-              </div>
-
-              <div className="p-8 space-y-8">
-                {selectedPlan.exercises?.map((ex: any, idx: number) => (
-                  <div key={ex.id} className="space-y-4 group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-8 h-8 rounded-lg bg-cyan-400 flex items-center justify-center text-black font-black italic">
-                        {idx + 1}
-                      </div>
-                      <h4 className="text-xl font-bold">{ex.name}</h4>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="p-4 bg-white/5 rounded-2xl border border-white/5 group-hover:border-cyan-400/20 transition-colors">
-                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Sets</p>
-                        <p className="text-lg font-bold">{ex.sets}</p>
-                      </div>
-                      <div className="p-4 bg-white/5 rounded-2xl border border-white/5 group-hover:border-cyan-400/20 transition-colors">
-                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Reps</p>
-                        <p className="text-lg font-bold">{ex.reps}</p>
-                      </div>
-                      <div className="p-4 bg-white/5 rounded-2xl border border-white/5 group-hover:border-cyan-400/20 transition-colors">
-                        <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Rest</p>
-                        <p className="text-lg font-bold">{ex.rest_seconds}s</p>
-                      </div>
-                    </div>
-
-                    {ex.video_url && (
-                      <div className="aspect-video w-full rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-red-500/30 transition-all">
-                        <iframe
-                          width="100%"
-                          height="100%"
-                          src={ex.video_url.replace('watch?v=', 'embed/')}
-                          title={ex.name}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        ></iframe>
-                      </div>
-                    )}
-
-                    <p className="text-sm text-gray-400 leading-relaxed italic border-l-2 border-cyan-400/30 pl-4 py-1">
-                      {ex.instructions}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <WorkoutStackDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        exercise={selectedExercise}
+        onToggleComplete={handleExerciseToggle}
+      />
     </div>
   );
 };

@@ -42,7 +42,8 @@ class User(Base):
 
     fitness_level = Column(String, default="beginner")
     fitness_goal = Column(String, nullable=True)
-    workout_preference = Column(String, nullable=True)
+    workout_preference = Column(Enum(WorkoutPreference), default=WorkoutPreference.GYM)
+    muscle_split = Column(Integer, default=1) # 1 or 2 muscles per day
     diet_preference = Column(String, nullable=True)
 
     is_active = Column(Boolean, default=True)

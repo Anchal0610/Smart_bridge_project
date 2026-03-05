@@ -35,6 +35,7 @@ def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
         fitness_level=user_in.fitness_level,
         fitness_goal=user_in.fitness_goal,
         workout_preference=user_in.workout_preference,
+        muscle_split=user_in.muscle_split,
         diet_preference=user_in.diet_preference
     )
     db.add(db_user)

@@ -11,11 +11,30 @@ import {
   ChevronRight
 } from 'lucide-react';
 
+import { progressApi } from '../../services/api';
+
 const ProgressTracking = () => {
-  const stats = [
-    { label: 'Total Weight Loss', value: '4.2 kg', trend: '+0.5 this week', icon: Target, color: 'text-cyan-400' },
-    { label: 'Avg Calories Burned', value: '450', trend: 'Consistent', icon: Flame, color: 'text-orange-400' },
-    { label: 'Workout Streak', value: '12 Days', trend: 'Personal Best!', icon: Activity, color: 'text-green-400' },
+  const [stats, setStats] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await progressApi.getStats();
+        setStats(response.data);
+      } catch (error) {
+        console.error('Failed to fetch progress stats', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const statCards = [
+    { label: 'Workout Completion', value: stats ? `${stats.completed_exercises}/${stats.total_exercises}` : '--', trend: stats ? `${stats.completion_rate}% rate` : '', icon: Target, color: 'text-cyan-400' },
+    { label: 'Meal Consistency', value: stats ? `${stats.eaten_meals}/${stats.total_meals}` : '--', trend: 'Meals logged', icon: Flame, color: 'text-orange-400' },
+    { label: 'Current Streak', value: stats ? `${stats.streak} Days` : '--', trend: 'Personal Best!', icon: Activity, color: 'text-green-400' },
     { label: 'Health Score', value: '82', trend: '+5 pts', icon: Award, color: 'text-purple-400' },
   ];
 
@@ -33,7 +52,7 @@ const ProgressTracking = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, idx) => (
+        {statCards.map((stat, idx) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}

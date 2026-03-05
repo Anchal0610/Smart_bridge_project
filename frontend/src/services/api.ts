@@ -23,12 +23,16 @@ export const authApi = {
 
 export const workoutApi = {
   getPlans: () => api.get('/workouts/plans'),
-  generatePlan: (goal: string, level: string) => api.post(`/workouts/generate?goal=${goal}&fitness_level=${level}`),
+  generatePlan: () => api.post('/workouts/generate'),
   getPlanDetails: (id: number) => api.get(`/workouts/plans/${id}`),
+  getActivePlan: () => api.get('/workouts/plans/active'),
+  completeExercise: (id: number) => api.patch(`/workouts/exercises/${id}/complete`),
 };
 
 export const nutritionApi = {
-  getTargets: () => api.get('/nutrition/targets'),
+  generateMonthlyPlan: () => api.post('/nutrition/generate'),
+  markMealEaten: (id: number) => api.patch(`/nutrition/meals/${id}/eat`),
+  getCurrentPlan: () => api.get('/nutrition/current-plan'),
   searchRecipes: (query: string) => api.get(`/nutrition/recipes/search?query=${query}`),
   logMeal: (data: any) => api.post('/nutrition/log', data),
 };

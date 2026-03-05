@@ -6,6 +6,15 @@ interface User {
   username: string;
   email: string;
   full_name?: string;
+  age?: number;
+  gender?: string;
+  height?: number;
+  weight?: number;
+  fitness_level?: string;
+  fitness_goal?: string;
+  workout_preference?: string;
+  muscle_split?: number;
+  diet_preference?: string;
   health_tokens?: number;
   credits?: number;
 }

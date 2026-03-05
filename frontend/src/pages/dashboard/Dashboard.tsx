@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
   TrendingUp,
@@ -20,30 +20,33 @@ import {
   Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { workoutApi, nutritionApi, healthApi } from '../../services/api';
+import { workoutApi, nutritionApi, healthApi, userApi } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
+import LiveSessionModal from '../../components/workouts/LiveSessionModal';
+import { isSameDay } from 'date-fns';
 
 const Dashboard = () => {
   const user = useAuthStore(state => state.user);
   const [activePlan, setActivePlan] = useState<any>(null);
-  const [nutritionTargets, setNutritionTargets] = useState<any>(null);
+  const [nutritionPlan, setNutritionPlan] = useState<any[]>([]);
   const [healthTrends, setHealthTrends] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showLiveSession, setShowLiveSession] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [plansRes, nutritionRes, healthRes] = await Promise.all([
-          workoutApi.getPlans(),
-          nutritionApi.getTargets(),
+        const [activeWorkoutRes, nutritionPlanRes, healthRes] = await Promise.all([
+          workoutApi.getActivePlan(),
+          nutritionApi.getCurrentPlan(),
           healthApi.getTrends()
         ]);
 
-        setActivePlan(plansRes.data[0]);
-        setNutritionTargets(nutritionRes.data);
+        setActivePlan(activeWorkoutRes.data);
+        setNutritionPlan(nutritionPlanRes.data);
         setHealthTrends(healthRes.data);
       } catch (error) {
-        console.error('Failed to fetch dashboard data', error);
+        console.log('No active plans found');
       } finally {
         setLoading(false);
       }
@@ -52,11 +55,17 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
+  const todayExercises = activePlan?.exercises?.filter((ex: any) =>
+    isSameDay(new Date(ex.scheduled_date), new Date())
+  ) || [];
+
+  const completedToday = todayExercises.filter((ex: any) => ex.is_completed).length;
+
   const stats = [
-    { label: 'Workouts', value: '12', icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
-    { label: 'Daily Kcal', value: nutritionTargets?.daily_calories || '2,500', icon: TrendingUp, color: 'text-orange-400', bg: 'bg-orange-400/10' },
-    { label: 'Streak', value: '5 Days', icon: Sparkles, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
-    { label: 'Sleep Target', value: '8.0h', icon: Heart, color: 'text-red-400', bg: 'bg-red-400/10' },
+    { label: 'Workouts', value: `${completedToday}/${todayExercises.length}`, icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+    { label: 'Meals', value: `${nutritionPlan?.filter((m: any) => isSameDay(new Date(m.scheduled_date), new Date()) && m.is_eaten).length || 0}/3`, icon: TrendingUp, color: 'text-orange-400', bg: 'bg-orange-400/10' },
+    { label: 'Streak', value: '12 Days', icon: Sparkles, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
+    { label: 'Health Score', value: '82', icon: Award, color: 'text-purple-400', bg: 'bg-purple-400/10' },
   ];
 
   if (loading) {
@@ -89,7 +98,11 @@ const Dashboard = () => {
             <ShieldCheck className="w-4 h-4 text-cyan-400" />
             <span className="text-[10px] font-black uppercase tracking-widest">Diagnosis</span>
           </Link>
-          <button className="premium-gradient px-6 py-3 rounded-xl flex items-center gap-2 font-black text-black text-sm shadow-xl hover:scale-105 transition-transform uppercase italic">
+          <button
+            onClick={() => activePlan && setShowLiveSession(true)}
+            disabled={!activePlan}
+            className="premium-gradient px-6 py-3 rounded-xl flex items-center gap-2 font-black text-black text-sm shadow-xl hover:scale-105 transition-transform uppercase italic disabled:opacity-50 disabled:grayscale"
+          >
             <Zap className="w-4 h-4 fill-current" />
             Start Session
           </button>
@@ -196,29 +209,30 @@ const Dashboard = () => {
 
         {/* Community / Rewards Sidebar */}
         <div className="space-y-8">
-          <section className="glass-card p-8 bg-cyan-400 mb-6 text-black border-none shadow-2xl shadow-cyan-400/20">
-            <div className="flex justify-between items-start mb-8">
-              <div className="p-3 bg-black/10 rounded-xl">
-                <Award className="w-8 h-8" />
+          <section className="glass-card p-8 bg-gradient-to-br from-cyan-600 to-cyan-400 mb-6 text-white border-none shadow-2xl shadow-cyan-400/20 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl -mr-16 -mt-16" />
+            <div className="flex justify-between items-start mb-8 relative z-10">
+              <div className="p-3 bg-white/20 rounded-xl">
+                <Award className="w-8 h-8 text-white" />
               </div>
               <div className="text-right">
                 <p className="text-4xl font-black italic tracking-tighter">1,240</p>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Impact Tokens</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Impact Tokens</p>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3 relative z-10">
               <div className="flex justify-between items-end mb-1">
-                <span className="text-[10px] font-black uppercase tracking-widest">Weekly Milestone</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-80">Weekly Milestone</span>
                 <span className="text-xs font-bold">65%</span>
               </div>
-              <div className="w-full bg-black/10 rounded-full h-2">
+              <div className="w-full bg-black/20 rounded-full h-2">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: '65%' }}
-                  className="bg-black h-full rounded-full"
+                  className="bg-white h-full rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]"
                 />
               </div>
-              <p className="text-[10px] font-bold italic opacity-60 pt-2 text-center underline">You've unlocked ₹50 for community health!</p>
+              <p className="text-[10px] font-bold italic opacity-90 pt-2 text-center underline decoration-white/30">You've unlocked ₹50 for community health!</p>
             </div>
           </section>
 
@@ -236,6 +250,27 @@ const Dashboard = () => {
           </Link>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showLiveSession && activePlan && (
+          <LiveSessionModal
+            plan={{ ...activePlan, exercises: todayExercises }}
+            onClose={() => setShowLiveSession(false)}
+            onFinish={async (stats) => {
+              console.log('Session finished:', stats);
+              // Mark all today's exercises as complete
+              try {
+                await Promise.all(todayExercises.map((ex: any) => workoutApi.completeExercise(ex.id)));
+                setShowLiveSession(false);
+                // Refresh dashboard data
+                window.location.reload();
+              } catch (error) {
+                console.error('Failed to log session', error);
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
