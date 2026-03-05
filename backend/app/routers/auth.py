@@ -35,6 +35,7 @@ def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
         fitness_level=user_in.fitness_level,
         fitness_goal=user_in.fitness_goal,
         workout_preference=user_in.workout_preference,
+        muscle_split=user_in.muscle_split,
         diet_preference=user_in.diet_preference
     )
     db.add(db_user)
@@ -62,7 +63,7 @@ def login(user_in: schemas.UserLogin, db: Session = Depends(get_db)):
     access_token = auth.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
 @router.get("/me", response_model=schemas.User)

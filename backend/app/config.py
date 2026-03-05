@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from typing import List
 
 class Settings(BaseSettings):
     DATABASE_URL: str
@@ -10,16 +11,19 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
 
+    # AI & External APIs
     GROQ_API_KEY: str
-    YOUTUBE_API_KEY: str
     OPENAI_API_KEY: str
     GEMINI_API_KEY: str
+    YOUTUBE_API_KEY: str
+    SPOONACULAR_API_KEY: str
 
+    # Google Calendar
     GOOGLE_CALENDAR_CLIENT_ID: str
     GOOGLE_CALENDAR_CLIENT_SECRET: str
     GOOGLE_CALENDAR_REDIRECT_URI: str
 
-    CORS_ORIGINS: list = ["*"]
+    CORS_ORIGINS: List[str] = ["*"]
 
     class Config:
         env_file = ".env"

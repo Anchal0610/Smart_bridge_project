@@ -40,6 +40,7 @@ class UserCreate(UserBase):
     fitness_level: Optional[FitnessLevel] = FitnessLevel.BEGINNER
     fitness_goal: Optional[FitnessGoal] = FitnessGoal.MAINTENANCE
     workout_preference: Optional[WorkoutPreference] = WorkoutPreference.HOME
+    muscle_split: Optional[int] = 1 # 1 or 2 muscles per day
     diet_preference: Optional[DietPreference] = DietPreference.VEGETARIAN
 
 class UserUpdate(BaseModel):
@@ -51,11 +52,13 @@ class UserUpdate(BaseModel):
     fitness_level: Optional[FitnessLevel] = None
     fitness_goal: Optional[FitnessGoal] = None
     workout_preference: Optional[WorkoutPreference] = None
+    muscle_split: Optional[int] = None
     diet_preference: Optional[DietPreference] = None
 
 class User(UserBase):
     id: int
     is_active: bool
+    muscle_split: int
     created_at: datetime
 
     class Config:
@@ -64,6 +67,7 @@ class User(UserBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user: User
 
 class TokenData(BaseModel):
     username: Optional[str] = None

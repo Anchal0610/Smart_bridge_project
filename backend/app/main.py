@@ -7,6 +7,7 @@ import os
 # Import routers
 from .routers import auth, users, workouts, nutrition, progress, admin, chat, health, coach
 from .database import engine, Base
+from .models import user, fitness # Ensure all models are registered with Base
 
 load_dotenv()
 
