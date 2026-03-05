@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
+  baseURL: (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:8000/api',
 });
 
 api.interceptors.request.use((config) => {
@@ -38,6 +38,16 @@ export const progressApi = {
 export const userApi = {
   getProfile: () => api.get('/users/me'),
   updateProfile: (data: any) => api.patch('/users/me', data),
+};
+
+export const adminApi = {
+  diagnoseGroq: () => api.get('/admin/diagnose/groq'),
+  diagnoseGemini: () => api.get('/admin/diagnose/gemini'),
+  diagnoseYouTube: () => api.get('/admin/diagnose/youtube'),
+  diagnoseSpoonacular: () => api.get('/admin/diagnose/spoonacular'),
+  diagnoseOpenAI: () => api.get('/admin/diagnose/openai'),
+  diagnoseCalendar: () => api.get('/admin/diagnose/calendar'),
+  diagnoseDB: () => api.get('/admin/diagnose/db'),
 };
 
 export default api;

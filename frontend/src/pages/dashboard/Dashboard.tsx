@@ -16,7 +16,8 @@ import {
   Play,
   MessageCircle,
   ClipboardList,
-  Bot
+  Bot,
+  ShieldCheck
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { userApi } from '../../services/api';
@@ -46,6 +47,10 @@ const Dashboard = () => {
         </motion.div>
 
         <div className="flex items-center gap-3">
+          <Link to="/admin/diagnose" className="glass-card px-4 py-2 flex items-center gap-2 hover:bg-white/10 transition-colors border border-cyan-400/30">
+            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+            <span className="text-sm font-medium">System Diagnosis</span>
+          </Link>
           <Link to="/health" className="glass-card px-4 py-2 flex items-center gap-2 hover:bg-white/10 transition-colors">
             <ClipboardList className="w-4 h-4 text-cyan-400" />
             <span className="text-sm font-medium">New Assessment</span>
