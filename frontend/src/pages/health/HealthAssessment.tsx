@@ -1,182 +1,223 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ChevronRight,
-  ChevronLeft,
-  CheckCircle2,
-  AlertCircle,
-  Activity,
-  Heart,
-  Scale,
-  Target
-} from 'lucide-react';
-import { toast } from 'react-hot-toast';
-
-const questions = [
-  { id: 'age', label: 'What is your age?', type: 'number', icon: Activity },
-  { id: 'gender', label: 'What is your gender?', type: 'select', options: ['Male', 'Female', 'Other'], icon: Heart },
-  { id: 'weight', label: 'Current Weight (kg)', type: 'number', icon: Scale },
-  { id: 'height', label: 'Height (cm)', type: 'number', icon: Scale },
-  { id: 'goal', label: 'What is your primary goal?', type: 'select', options: ['Weight Loss', 'Muscle Gain', 'Endurance', 'General Fitness'], icon: Target },
-  { id: 'activity', label: 'Activity Level', type: 'select', options: ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active'], icon: Activity },
-  { id: 'medical', label: 'Any medical conditions?', type: 'text', placeholder: 'e.g., Diabetes, Hypertension (or None)', icon: AlertCircle },
-  { id: 'allergies', label: 'Food allergies?', type: 'text', placeholder: 'e.g., Dairy, Nuts (or None)', icon: Heart },
-  { id: 'injuries', label: 'Current or past injuries?', type: 'text', placeholder: 'e.g., Knee pain, Back injury', icon: AlertCircle },
-  { id: 'medications', label: 'Are you taking any medications?', type: 'text', placeholder: 'List here or None', icon: Heart },
-  { id: 'workout_pref', label: 'Workout Preference', type: 'select', options: ['Gym', 'Home', 'Outdoor', 'Mixed'], icon: Activity },
-  { id: 'diet_pref', label: 'Diet Preference', type: 'select', options: ['No Preference', 'Vegetarian', 'Vegan', 'Keto'], icon: Target },
-];
+import { HeartPulse, Scale, Activity, Zap, TrendingUp, Loader2, Info, ChevronRight, CheckCircle2, Target } from 'lucide-react';
+import { healthApi } from '../../services/api';
 
 const HealthAssessment = () => {
-  const [currentStep, setCurrentStep] = React.useState(0);
-  const [formData, setFormData] = React.useState<any>({});
-  const [isCompleted, setIsCompleted] = React.useState(false);
+  const [trends, setTrends] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
-  const handleNext = () => {
-    if (currentStep < questions.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      setIsCompleted(true);
-      toast.success('Assessment completed! AI is analyzing your data...');
+  // Form State
+  const [formData, setFormData] = useState({
+    weight: 70,
+    height: 175,
+    energy_level: 7,
+    sleep_hours: 8,
+    notes: ''
+  });
+
+  useEffect(() => {
+    fetchTrends();
+  }, []);
+
+  const fetchTrends = async () => {
+    try {
+      const response = await healthApi.getTrends();
+      setTrends(response.data);
+    } catch (error) {
+      console.error('Failed to fetch trends', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await healthApi.submitAssessment(formData);
+      setSuccess(true);
+      fetchTrends();
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (error) {
+      console.error('Submission failed', error);
+    } finally {
+      setSubmitting(false);
     }
   };
-
-  const handleInputChange = (value: any) => {
-    setFormData({ ...formData, [questions[currentStep].id]: value });
-  };
-
-  const currentQuestion = questions[currentStep];
-  const progress = ((currentStep + 1) / questions.length) * 100;
-
-  if (isCompleted) {
-    return (
-      <div className="max-w-2xl mx-auto py-12">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="glass-card p-12 text-center space-y-6"
-        >
-          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-10 h-10 text-green-400" />
-          </div>
-          <h2 className="text-3xl font-bold">Assessment Completed!</h2>
-          <p className="text-gray-400">
-            Thank you for sharing your health details. Our AI Coach (AROMI) is now generating
-            a personalized plan for your fitness journey.
-          </p>
-          <button
-            onClick={() => window.location.href = '/dashboard'}
-            className="premium-gradient px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform"
-          >
-            Go to Dashboard
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Health Assessment</h1>
-        <p className="text-gray-400">Step {currentStep + 1} of {questions.length}</p>
-        <div className="w-full bg-white/5 h-2 rounded-full mt-4 overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            className="h-full premium-gradient"
-          />
+    <div className="space-y-8 pb-20 pt-14 md:pt-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-black italic tracking-tighter">HEALTH <span className="text-cyan-400">ASSESSMENT</span></h1>
+          <p className="text-sm text-gray-400 mt-1">Track your vitals and discover AI-driven health trends.</p>
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentStep}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          className="glass-card p-8 md:p-12"
-        >
-          <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 bg-cyan-400/10 rounded-xl">
-              <currentQuestion.icon className="w-6 h-6 text-cyan-400" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Assessment Form */}
+        <div className="glass-card p-8 space-y-8 border-cyan-400/10">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-cyan-400 text-black rounded-xl">
+              <HeartPulse className="w-6 h-6" />
             </div>
-            <h2 className="text-xl md:text-2xl font-semibold">{currentQuestion.label}</h2>
+            <h2 className="text-xl font-bold italic">New Daily Log</h2>
           </div>
 
-          <div className="space-y-4">
-            {currentQuestion.type === 'number' && (
-              <input
-                type="number"
-                value={formData[currentQuestion.id] || ''}
-                onChange={(e) => handleInputChange(e.target.value)}
-                placeholder="Enter value..."
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xl focus:outline-none focus:border-cyan-400 transition-colors"
-                autoFocus
-              />
-            )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Weight (kg)</label>
+                <div className="relative">
+                  <Scale className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                  <input
+                    type="number"
+                    value={formData.weight}
+                    onChange={(e) => setFormData({...formData, weight: parseFloat(e.target.value)})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-cyan-400 transition-colors"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Height (cm)</label>
+                <div className="relative">
+                  <Target className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                  <input
+                    type="number"
+                    value={formData.height}
+                    onChange={(e) => setFormData({...formData, height: parseFloat(e.target.value)})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-cyan-400 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
 
-            {currentQuestion.type === 'text' && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-end">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Energy Level</label>
+                <span className="text-sm font-bold text-cyan-400">{formData.energy_level}/10</span>
+              </div>
               <input
-                type="text"
-                value={formData[currentQuestion.id] || ''}
-                onChange={(e) => handleInputChange(e.target.value)}
-                placeholder={currentQuestion.placeholder}
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xl focus:outline-none focus:border-cyan-400 transition-colors"
-                autoFocus
+                type="range" min="1" max="10"
+                value={formData.energy_level}
+                onChange={(e) => setFormData({...formData, energy_level: parseInt(e.target.value)})}
+                className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyan-400"
               />
-            )}
+            </div>
 
-            {currentQuestion.type === 'select' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {currentQuestion.options?.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => handleInputChange(option)}
-                    className={`p-4 rounded-xl border text-left transition-all ${
-                      formData[currentQuestion.id] === option
-                        ? 'bg-cyan-400/20 border-cyan-400 text-cyan-400'
-                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Sleep (Hours)</label>
+              <div className="relative">
+                <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                <input
+                  type="number"
+                  step="0.5"
+                  value={formData.sleep_hours}
+                  onChange={(e) => setFormData({...formData, sleep_hours: parseFloat(e.target.value)})}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-cyan-400 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Daily Notes</label>
+              <textarea
+                placeholder="How are you feeling today?"
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 h-24 focus:outline-none focus:border-cyan-400 transition-colors resize-none text-sm"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full premium-gradient p-4 rounded-2xl text-black font-black uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-50"
+            >
+              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                <>
+                  <ChevronRight className="w-5 h-5" />
+                  SUBMIT ASSESSMENT
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* AI Trends Sidebar */}
+        <div className="space-y-8">
+          <div className="glass-card p-8 border-cyan-400/20 bg-cyan-400/[0.02]">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-cyan-400/10 text-cyan-400 rounded-xl border border-cyan-400/20">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <h2 className="text-xl font-bold italic">AI Health Trends</h2>
+            </div>
+
+            {loading ? (
+              <div className="p-12 flex flex-col items-center justify-center gap-4 text-gray-600 animate-pulse text-center">
+                <Loader2 className="w-8 h-8 animate-spin" />
+                <p className="text-xs font-bold uppercase tracking-widest">Aromi is analyzing your data...</p>
+              </div>
+            ) : trends?.status === 'no_data' ? (
+              <div className="p-12 text-center space-y-4">
+                <Info className="w-10 h-10 text-gray-700 mx-auto" />
+                <p className="text-sm text-gray-400">{trends.message}</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="p-6 bg-white/5 rounded-2xl border border-white/5 relative group">
+                  <div className="absolute top-0 right-0 p-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                    <Zap className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400 mb-2">Trend Summary</h4>
+                  <p className="text-sm italic leading-relaxed text-gray-300">
+                    "{trends?.ai_analysis}"
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">History Records</h4>
+                  <div className="space-y-3">
+                    {trends?.history?.map((record: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                        <div>
+                          <p className="text-xs font-bold">{new Date(record.date).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-gray-500 uppercase font-black">{record.weight}kg • Energy: {record.energy}/10</p>
+                        </div>
+                        <CheckCircle2 className="w-4 h-4 text-cyan-400/50" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-between mt-12">
-            <button
-              onClick={handleBack}
-              disabled={currentStep === 0}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-                currentStep === 0 ? 'opacity-0' : 'hover:bg-white/10 text-white'
-              }`}
-            >
-              <ChevronLeft className="w-5 h-5" /> Back
-            </button>
-
-            <button
-              onClick={handleNext}
-              disabled={!formData[currentQuestion.id]}
-              className={`flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all shadow-lg ${
-                !formData[currentQuestion.id]
-                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                  : 'premium-gradient text-white hover:scale-105 active:scale-95'
-              }`}
-            >
-              {currentStep === questions.length - 1 ? 'Finish' : 'Next'}
-              <ChevronRight className="w-5 h-5" />
-            </button>
+          <div className="glass-card p-8 bg-gradient-to-br from-red-500/10 to-transparent border-red-500/10">
+            <h3 className="text-sm font-black uppercase tracking-widest text-red-400 mb-2">Priority Advice</h3>
+            <p className="text-sm text-gray-400">
+              Your energy levels seem consistent, but don't forget that consistent sleep (7-8h) is the fuel for your muscle growth goals.
+            </p>
           </div>
-        </motion.div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed bottom-12 right-12 z-[100] bg-cyan-400 text-black px-8 py-4 rounded-2xl font-black shadow-2xl flex items-center gap-3"
+          >
+            <CheckCircle2 className="w-6 h-6" />
+            ASSESSMENT LOGGED!
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

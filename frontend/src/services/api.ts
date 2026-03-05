@@ -22,13 +22,20 @@ export const authApi = {
 };
 
 export const workoutApi = {
-  getPlans: () => api.get('/workouts'),
-  generatePlan: (data: any) => api.post('/workouts/generate', data),
+  getPlans: () => api.get('/workouts/plans'),
+  generatePlan: (goal: string, level: string) => api.post(`/workouts/generate?goal=${goal}&fitness_level=${level}`),
+  getPlanDetails: (id: number) => api.get(`/workouts/plans/${id}`),
 };
 
 export const nutritionApi = {
-  getPlans: () => api.get('/nutrition'),
-  generatePlan: (data: any) => api.post('/nutrition/generate', data),
+  getTargets: () => api.get('/nutrition/targets'),
+  searchRecipes: (query: string) => api.get(`/nutrition/recipes/search?query=${query}`),
+  logMeal: (data: any) => api.post('/nutrition/log', data),
+};
+
+export const healthApi = {
+  submitAssessment: (data: any) => api.post('/health/assessment', data),
+  getTrends: () => api.get('/health/trends'),
 };
 
 export const progressApi = {
